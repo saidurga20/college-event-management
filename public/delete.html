@@ -1,0 +1,152 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delete Event</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="/index.html" class="logo">
+        <span class="logo-icon">✳</span> Event Management
+    </a>
+    <nav class="nav-links">
+        <a href="/index.html">Home</a>
+        <a href="/list.html">List Events</a>
+        <a href="/insert.html">Insert Event</a>
+        <a href="/listOne.html">Search Event</a>
+        <a href="/update.html">Update Event</a>
+        <a class="active" href="/delete.html">Delete Event</a>
+    </nav>
+</header>
+
+<main class="crud-page">
+
+    <div class="page-heading">
+        <p class="eyebrow">MANAGE YOUR RECORDS</p>
+        <h1>Delete an <span>Event.</span></h1>
+        <p>Choose the event you want to remove from your database.</p>
+    </div>
+
+    <section class="crud-layout">
+
+        <!-- Delete Event Image -->
+        <img
+            class="crud-image"
+            src="/images/delete.jpg"
+            alt="Delete College Event">
+
+        <div class="crud-content">
+            <p class="section-note">REVIEW BEFORE REMOVING</p>
+
+            <h2 style="font-family:Georgia,serif;font-size:28px;font-weight:500;">
+                Keep your event list
+                <span style="color:var(--terracotta);font-style:italic;">
+                    organized.
+                </span>
+            </h2>
+
+            <p style="color:var(--muted);margin:12px 0 18px;">
+                Select the correct Event ID before deleting.
+                This action removes the selected event from the database.
+            </p>
+
+            <div class="form-container">
+                <label for="eventid">Select Event ID</label>
+
+                <select id="eventid">
+                    <option value="">Select Event ID</option>
+                </select>
+
+                <button type="button" id="deleteButton">
+                    Delete Event
+                </button>
+
+                <p id="message" class="message" aria-live="polite"></p>
+            </div>
+        </div>
+
+    </section>
+</main>
+
+<footer class="footer">
+    COLLEGE EVENT MANAGEMENT · PLAN · CONNECT · CELEBRATE
+</footer>
+
+<script>
+const select = document.getElementById("eventid");
+const message = document.getElementById("message");
+const deleteButton = document.getElementById("deleteButton");
+
+async function loadIDs() {
+    try {
+        const response = await fetch("/events");
+
+        if (!response.ok) {
+            throw new Error("Unable to fetch events.");
+        }
+
+        const events = await response.json();
+
+        select.replaceChildren(
+            new Option("Select Event ID", "")
+        );
+
+        events.forEach(event => {
+            select.add(
+                new Option(event.eventid, event.eventid)
+            );
+        });
+
+    } catch (error) {
+        message.textContent = "Could not load IDs: " + error.message;
+    }
+}
+
+deleteButton.addEventListener("click", async () => {
+    const id = select.value;
+
+    if (!id) {
+        message.textContent = "Please select an Event ID.";
+        return;
+    }
+
+    if (!confirm("Delete event ID " + id + "? This cannot be undone.")) {
+        return;
+    }
+
+    deleteButton.disabled = true;
+    message.textContent = "Deleting event...";
+
+    try {
+        const response = await fetch(
+            "/events/" + encodeURIComponent(id),
+            { method: "DELETE" }
+        );
+
+        const result = await response.text();
+
+        if (!response.ok) {
+            throw new Error(result || "Delete failed.");
+        }
+
+        message.textContent = "Event deleted successfully!";
+        await loadIDs();
+
+    } catch (error) {
+        message.textContent = "Delete failed: " + error.message;
+
+    } finally {
+        deleteButton.disabled = false;
+    }
+});
+
+loadIDs();
+</script>
+
+</body>
+</html>
+```

@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Search Event</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="navbar">
+    <a href="/index.html" class="logo"><span class="logo-icon">✳</span> Event Management</a>
+    <nav class="nav-links">
+        <a href="/index.html">Home</a>
+        <a href="/list.html">List Events</a>
+        <a href="/insert.html">Insert Event</a>
+        <a class="active" href="/listOne.html">Search Event</a>
+        <a href="/update.html">Update Event</a>
+        <a href="/delete.html">Delete Event</a>
+    </nav>
+</header>
+
+<main class="crud-page">
+    <div class="page-heading">
+        <p class="eyebrow">FIND AN EVENT</p>
+        <h1>Search <span>Events.</span></h1>
+        <p>Select an event ID to view its details.</p>
+    </div>
+
+    <section class="crud-layout">
+        <img class="crud-image" src="/images/list1.jpg" alt="Calendar illustration">
+
+        <div class="crud-content">
+            <p class="section-note">LOOK IT UP</p>
+            <h2 style="font-family:Georgia,serif;font-size:28px;font-weight:500;">
+                Find the details <span style="color:var(--terracotta);font-style:italic;">you need.</span>
+            </h2>
+            <div class="form-container">
+                <label for="eventid">Select Event ID</label>
+                <select id="eventid">
+                    <option value="">Select Event ID</option>
+                </select>
+                <button type="button" id="searchButton">⌕ Search Event</button>
+                <p id="message" class="message" aria-live="polite"></p>
+            </div>
+        </div>
+    </section>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Event ID</th><th>Event Name</th><th>Time</th>
+                    <th>Day</th><th>Venue</th><th>Description</th>
+                </tr>
+            </thead>
+            <tbody id="eventRow"></tbody>
+        </table>
+    </div>
+</main>
+
+<footer class="footer">COLLEGE EVENT MANAGEMENT · PLAN · CONNECT · CELEBRATE</footer>
+
+<script>
+const select = document.getElementById("eventid");
+const message = document.getElementById("message");
+const row = document.getElementById("eventRow");
+
+async function loadIDs() {
+    try {
+        const response = await fetch("/events");
+        if (!response.ok) throw new Error(await response.text());
+        const events = await response.json();
+
+        events.forEach(event => {
+            select.add(new Option(event.eventid, event.eventid));
+        });
+    } catch (error) {
+        message.textContent = "Could not load IDs: " + error.message;
+    }
+}
+
+document.getElementById("searchButton").addEventListener("click", async () => {
+    row.replaceChildren();
+
+    if (!select.value) {
+        message.textContent = "Please select an Event ID.";
+        return;
+    }
+
+    try {
+        const response = await fetch("/events/" + encodeURIComponent(select.value));
+        if (!response.ok) throw new Error(await response.text());
+
+        const event = await response.json();
+        const tr = row.insertRow();
+
+        [
+            event.eventid, event.event_name, event.event_time,
+            event.event_day, event.venue, event.description
+        ].forEach(value => {
+            const td = tr.insertCell();
+            td.textContent = value ?? "";
+        });
+
+        message.textContent = "Event found.";
+    } catch (error) {
+        message.textContent = "Search failed: " + error.message;
+    }
+});
+
+loadIDs();
+</script>
+</body>
+</html>

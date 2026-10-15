@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>List Events</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="navbar">
+    <a href="/index.html" class="logo"><span class="logo-icon">✳</span> Event Management</a>
+    <nav class="nav-links">
+        <a href="/index.html">Home</a>
+        <a class="active" href="/list.html">List Events</a>
+        <a href="/insert.html">Insert Event</a>
+        <a href="/listOne.html">Search Event</a>
+        <a href="/update.html">Update Event</a>
+        <a href="/delete.html">Delete Event</a>
+    </nav>
+</header>
+
+<main class="crud-page">
+    <div class="page-heading">
+        <p class="eyebrow">ALL YOUR CAMPUS MOMENTS</p>
+        <h1>List of <span>Events.</span></h1>
+        <p>View all the events stored in your database.</p>
+    </div>
+
+    <section class="crud-layout">
+        <img class="crud-image" src="/images/list.jpg" alt="College events illustration">
+
+        <div class="crud-content">
+            <p class="section-note">YOUR CAMPUS, YOUR MEMORIES</p>
+            <h2 style="font-family:Georgia,serif;font-weight:500;font-size:28px;">
+                Every event, <span style="color:var(--terracotta);font-style:italic;">in one place.</span>
+            </h2>
+            <p style="color:var(--muted);margin-top:10px;">
+                Check the event IDs, names, schedules, venues and descriptions
+                recorded in your college event database.
+            </p>
+            <div class="center-actions">
+                <button type="button" id="refreshButton">↻ Refresh List</button>
+                <p id="message" class="message" aria-live="polite"></p>
+            </div>
+        </div>
+    </section>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Event ID</th><th>Event Name</th><th>Time</th>
+                    <th>Day</th><th>Venue</th><th>Description</th>
+                </tr>
+            </thead>
+            <tbody id="eventRows"></tbody>
+        </table>
+    </div>
+</main>
+
+<footer class="footer">COLLEGE EVENT MANAGEMENT · PLAN · CONNECT · CELEBRATE</footer>
+
+<script>
+const tbody = document.getElementById("eventRows");
+const message = document.getElementById("message");
+
+async function loadEvents() {
+    tbody.replaceChildren();
+    message.textContent = "Loading events...";
+
+    try {
+        const response = await fetch("/events");
+        if (!response.ok) throw new Error(await response.text());
+        const events = await response.json();
+
+        events.forEach(event => {
+            const row = tbody.insertRow();
+            [
+                event.eventid, event.event_name, event.event_time,
+                event.event_day, event.venue, event.description
+            ].forEach(value => {
+                const cell = row.insertCell();
+                cell.textContent = value ?? "";
+            });
+        });
+
+        message.textContent = events.length
+            ? "Total events: " + events.length
+            : "No events found.";
+    } catch (error) {
+        message.textContent = "Could not load events: " + error.message;
+    }
+}
+
+document.getElementById("refreshButton").addEventListener("click", loadEvents);
+loadEvents();
+</script>
+</body>
+</html>

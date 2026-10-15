@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Update Event</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="navbar">
+    <a href="/index.html" class="logo"><span class="logo-icon">✳</span> Event Management</a>
+    <nav class="nav-links">
+        <a href="/index.html">Home</a>
+        <a href="/list.html">List Events</a>
+        <a href="/insert.html">Insert Event</a>
+        <a href="/listOne.html">Search Event</a>
+        <a class="active" href="/update.html">Update Event</a>
+        <a href="/delete.html">Delete Event</a>
+    </nav>
+</header>
+
+<main class="crud-page">
+    <div class="page-heading">
+        <p class="eyebrow">KEEP DETAILS UP TO DATE</p>
+        <h1>Update an <span>Event.</span></h1>
+        <p>Select an event, edit its details and save your changes.</p>
+    </div>
+
+    <section class="crud-layout">
+        <img class="crud-image" src="/images/update.jpg" alt="Event planning illustration">
+
+        <div class="crud-content">
+            <p class="section-note">EDIT · REVIEW · SAVE</p>
+            <h2 style="font-family:Georgia,serif;font-size:28px;font-weight:500;">
+                Keep every detail <span style="color:var(--terracotta);font-style:italic;">just right.</span>
+            </h2>
+
+            <div class="form-container">
+                <form id="updateForm">
+                    <label for="eventid">Select Event ID</label>
+                    <select id="eventid" required>
+                        <option value="">Select Event ID</option>
+                    </select>
+
+                    <label for="event_name">Event Name</label>
+                    <input id="event_name" required>
+
+                    <label for="event_time">Event Time</label>
+                    <input id="event_time" required>
+
+                    <label for="event_day">Event Day</label>
+                    <input id="event_day" required>
+
+                    <label for="venue">Venue</label>
+                    <input id="venue" required>
+
+                    <label for="description">Description</label>
+                    <textarea id="description" required></textarea>
+
+                    <button type="submit">✎ Update Event</button>
+                    <p id="message" class="message" aria-live="polite"></p>
+                </form>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">COLLEGE EVENT MANAGEMENT · PLAN · CONNECT · CELEBRATE</footer>
+
+<script>
+const form = document.getElementById("updateForm");
+const select = document.getElementById("eventid");
+const message = document.getElementById("message");
+
+const fields = [
+    "event_name", "event_time", "event_day", "venue", "description"
+];
+
+async function loadIDs() {
+    try {
+        const response = await fetch("/events");
+        if (!response.ok) throw new Error(await response.text());
+
+        const events = await response.json();
+        events.forEach(event => {
+            select.add(new Option(event.eventid, event.eventid));
+        });
+    } catch (error) {
+        message.textContent = "Could not load IDs: " + error.message;
+    }
+}
+
+select.addEventListener("change", async () => {
+    message.textContent = "";
+
+    if (!select.value) {
+        fields.forEach(id => {
+            document.getElementById(id).value = "";
+        });
+        return;
+    }
+
+    try {
+        const response = await fetch("/events/" + encodeURIComponent(select.value));
+        if (!response.ok) throw new Error(await response.text());
+
+        const event = await response.json();
+        fields.forEach(id => {
+            document.getElementById(id).value = event[id] ?? "";
+        });
+    } catch (error) {
+        message.textContent = "Could not load event: " + error.message;
+    }
+});
+
+form.addEventListener("submit", async e => {
+    e.preventDefault();
+
+    if (!select.value) {
+        message.textContent = "Please select an Event ID.";
+        return;
+    }
+
+    const data = {};
+    fields.forEach(id => {
+        data[id] = document.getElementById(id).value.trim();
+    });
+
+    try {
+        const response = await fetch("/events/" + encodeURIComponent(select.value), {
+            method: "PUT",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.text();
+        if (!response.ok) throw new Error(result || "Update failed");
+
+        message.textContent = "Event updated successfully!";
+    } catch (error) {
+        message.textContent = "Update failed: " + error.message;
+    }
+});
+
+loadIDs();
+</script>
+</body>
+</html>
